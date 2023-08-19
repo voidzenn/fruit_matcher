@@ -1,24 +1,34 @@
 require "ruby2d"
-require_relative "lib/screen"
 require_relative "lib/game"
-require_relative "lib/custom_rectangle"
+require_relative "lib/custom_classes/screen"
 
 SCREEN_WIDTH = 800
-SCREE_HEIGHT = 600
+SCREEN_HEIGHT = 600
 BG_COLOR = "white"
 TITLE = "Matcher"
 
-Screen.set width: SCREEN_WIDTH, height: SCREE_HEIGHT, title: TITLE, background: BG_COLOR
+def run
+  Screen.set width: SCREEN_WIDTH, height: SCREEN_HEIGHT, title: TITLE, background: BG_COLOR
 
-game = Game.new
+  game = Game.new SCREEN_WIDTH, SCREEN_HEIGHT
 
-rect = CustomRectangle.new x: 10, y: 10, width: 100, height: 100, color: "red"
+  if game.running?
+    update do
+      game.update
+    end
 
-update do
+    render do
+    end
+
+    on :mouse_down do |event|
+      game.mouse_location = [event.x, event.y]
+      game.handle_click
+    end
+
+    set start_time: Time.now
+
+    Screen.show
+  end
 end
 
-render do
-  rect.draw
-end
-
-Screen.show
+run

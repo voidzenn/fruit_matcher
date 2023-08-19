@@ -1,6 +1,6 @@
 require "ruby2d"
 
-class CustomRectangle < Rectangle
+class CRectangle < Rectangle
   def initialize x:, y:, width:, height:, color:
     @x = x
     @y = y
