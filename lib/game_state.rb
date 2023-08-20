@@ -8,21 +8,20 @@ class GameState
     @screen_height = screen_height
   end
 
-  def init
-    instance ||= GameStateInit.new self
-  end
-
-  def play_button
-    instance ||= GameStatePlayButton.new self
-  end
-
-  def dimension_selection
-    instance ||= GameStateDimensionSelection.new self
+  def show
   end
 
   protected
 
   attr_reader :screen_width, :screen_height
+
+  def draw_button label, x, y, width, height
+    @button = Button.new(
+      label: label, x: x, y: y, width: width,
+      height: height
+    )
+    @button.draw
+  end
 end
 
 class GameStateInit < GameState
@@ -51,7 +50,7 @@ class GameStatePlayButton < GameState
   attr_reader :game_state
 
   def show_play_button
-    play_button ||= create_play_button
+    create_play_button
   end
 
   def center_x width
@@ -66,11 +65,7 @@ class GameStatePlayButton < GameState
     width = 200
     height = 60
 
-    @button = Button.new(
-      label: "Play", x: center_x(width), y: center_y(height), width: width,
-      height: height
-    )
-    @button.draw
+    draw_button "Play", center_x(width), center_y(height), width, height
   end
 end
 

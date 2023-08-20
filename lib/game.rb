@@ -27,17 +27,25 @@ class Game
     when INIT
       @current_state = PLAY_BUTTON
     when PLAY_BUTTON
-      @current_game_state = @game_state.play_button
+      @current_game_state ||= GameStatePlayButton.new  @game_state
     when DIMENSION_SELECTION
-      @current_game_state = @game_state.dimension_selection
+      @current_game_state ||= GameStateDimensionSelection.new @game_state
     when ENDED
     end
   end
 
+  # Handle click will be called in the main.rb when there is click events.
+  # Each state can have different process based on how it is used.
   def handle_click
     case @current_state
     when PLAY_BUTTON
-      callback = -> { @current_state = DIMENSION_SELECTION; Screen.clear }
+      # Passing callback helps in managing the state inside Game class
+      callback = -> { @current_state = DIMENSION_SELECTION;
+                      # We should assign nil in order for the ||= to work when
+                      # assigning new state.
+                      @current_game_state = nil;
+                      # Clears the last state drawn/shown.
+                      Screen.clear }
       @current_game_state.handle_click mouse_location, callback: callback
     when DIMENSION_SELECTION
     end
