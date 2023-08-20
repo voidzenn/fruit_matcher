@@ -8,9 +8,6 @@ class GameState
     @screen_height = screen_height
   end
 
-  def show
-  end
-
   protected
 
   attr_reader :screen_width, :screen_height
@@ -34,7 +31,7 @@ class GameStatePlayButton < GameState
   def initialize game_state
     @game_state = game_state
 
-    show_play_button
+    show
   end
 
   def handle_click mouse_location, callback:
@@ -49,19 +46,19 @@ class GameStatePlayButton < GameState
 
   attr_reader :game_state
 
-  def show_play_button
-    create_play_button
+  def show
+    show_play_button
   end
 
   def center_x width
-    (game_state.screen_width / 2) - (width / 2)
+    (game_state.screen_width - width) / 2
   end
 
   def center_y height
-    (game_state.screen_height / 2) - (height / 2)
+    (game_state.screen_height - height) / 2
   end
 
-  def create_play_button
+  def show_play_button
     width = 200
     height = 60
 
@@ -73,13 +70,43 @@ class GameStateDimensionSelection < GameState
   def initialize game_state
     @game_state = game_state
 
-    show_selection
+    show
   end
 
   private
 
   attr_reader :game_state
 
-  def show_selection
+  def screen_width
+    game_state.screen_width
+  end
+
+  def show
+    draw_selection_button
+  end
+
+  def draw_selection_button
+    width = 150
+    height = 60
+
+    new_y = screen_y_center height
+
+    draw_button "5 x 5", position_x(1), new_y, width, height
+    draw_button "10 x 10", position_x(4), new_y, width, height
+  end
+
+  def position_x column_position
+    # Divide width by 6 to have 6 columns
+
+    if column_position <= 6
+      column_size = screen_width / 6
+      position = column_size * column_position
+
+      return position
+    end
+  end
+
+  def screen_y_center btn_height
+    (game_state.screen_height / 2) - btn_height
   end
 end
