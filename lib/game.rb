@@ -6,6 +6,7 @@ require_relative "custom_classes/button"
 INIT = :init
 PLAY_BUTTON = :play_button
 DIMENSION_SELECTION = :dimension_selection
+IMAGE_SELECTION = :image_selection
 ENDED = :ended
 
 class Game
@@ -16,6 +17,7 @@ class Game
     @game_state = GameState.new screen_width, screen_height
     @current_game_state = nil
     @mouse_location = nil
+    @selected_dimension = nil
   end
 
   def running?
@@ -30,6 +32,8 @@ class Game
       @current_game_state ||= GameStatePlayButton.new  @game_state
     when DIMENSION_SELECTION
       @current_game_state ||= GameStateDimensionSelection.new @game_state
+    when IMAGE_SELECTION
+      @current_game_state ||= GameStateImageSelection.new @game_state, @selected_dimension
     when ENDED
     end
   end
@@ -46,8 +50,26 @@ class Game
                       @current_game_state = nil;
                       # Clears the last state drawn/shown.
                       Screen.clear }
-      @current_game_state.handle_click mouse_location, callback: callback
+      game_state_handle_click callback: callback
     when DIMENSION_SELECTION
+      @selected_dimension = game_state_handle_click
+
+      unless @selected_dimension.nil?
+        @current_state = IMAGE_SELECTION
+        @current_game_state = nil
+        Screen.clear
+      end
+    when IMAGE_SELECTION
+    end
+  end
+
+  private
+
+  def game_state_handle_click callback: nil
+    if callback.nil?
+      @current_game_state.handle_click mouse_location
+    elsif
+      @current_game_state.handle_click mouse_location, callback: callback
     end
   end
 end

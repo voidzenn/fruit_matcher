@@ -13,11 +13,10 @@ class GameState
   attr_reader :screen_width, :screen_height
 
   def draw_button label, x, y, width, height
-    @button = Button.new(
+    Button.new(
       label: label, x: x, y: y, width: width,
       height: height
     )
-    @button.draw
   end
 end
 
@@ -62,7 +61,8 @@ class GameStatePlayButton < GameState
     width = 200
     height = 60
 
-    draw_button "Play", center_x(width), center_y(height), width, height
+    @button = draw_button "Play", center_x(width), center_y(height), width, height
+    @button.draw
   end
 end
 
@@ -71,6 +71,19 @@ class GameStateDimensionSelection < GameState
     @game_state = game_state
 
     show
+  end
+
+  def handle_click mouse_location
+    @btn_1.mouse_location = mouse_location
+    @btn_2.mouse_location = mouse_location
+
+    if @btn_1&.is_clicked?
+      "5x5"
+    elsif @btn_2&.is_clicked?
+      "10x10"
+    else
+      return
+    end
   end
 
   private
@@ -91,8 +104,10 @@ class GameStateDimensionSelection < GameState
 
     new_y = screen_y_center height
 
-    draw_button "5 x 5", position_x(1), new_y, width, height
-    draw_button "10 x 10", position_x(4), new_y, width, height
+    @btn_1 = draw_button "5 x 5", position_x(1), new_y, width, height
+    @btn_1.draw
+    @btn_2 = draw_button "10 x 10", position_x(4), new_y, width, height
+    @btn_2.draw
   end
 
   def position_x column_position
@@ -108,5 +123,19 @@ class GameStateDimensionSelection < GameState
 
   def screen_y_center btn_height
     (game_state.screen_height / 2) - btn_height
+  end
+end
+
+class GameStateImageSelection < GameState
+  def initialize game_state, dimension
+    @game_state = game_state
+    @dimension = dimension
+
+    show
+  end
+
+  private
+
+  def show
   end
 end
