@@ -1,3 +1,5 @@
+# fronze_string_literal: true
+
 require "ruby2d"
 require_relative "c_rectangle"
 require_relative "c_text"

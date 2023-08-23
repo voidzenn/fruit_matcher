@@ -1,3 +1,5 @@
+# fronze_string_literal: true
+
 require "ruby2d"
 require_relative "lib/game"
 require_relative "lib/custom_classes/screen"

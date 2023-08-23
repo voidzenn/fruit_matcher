@@ -1,3 +1,5 @@
+# fronze_string_literal: true
+
 require "ruby2d"
 require_relative "custom_classes/screen"
 require_relative "custom_classes/button"
@@ -112,7 +114,6 @@ class GameStateDimensionSelection < GameState
 
   def position_x column_position
     # Divide width by 6 to have 6 columns
-
     if column_position <= 6
       column_size = screen_width / 6
       position = column_size * column_position

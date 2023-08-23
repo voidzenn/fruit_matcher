@@ -1,3 +1,5 @@
+# fronze_string_literal: true
+
 require "ruby2d"
 require_relative "game_state"
 require_relative "custom_classes/button"
