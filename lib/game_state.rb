@@ -1,5 +1,8 @@
 # fronze_string_literal: true
 
+FOUR_BY_FOUR = "4 x 4"
+SIX_BY_SIX = "6 x 6"
+
 require "ruby2d"
 require_relative "custom_classes/screen"
 require_relative "custom_classes/button"
@@ -80,9 +83,9 @@ class GameStateDimensionSelection < GameState
     @btn_2.mouse_location = mouse_location
 
     if @btn_1&.is_clicked?
-      "5x5"
+      FOUR_BY_FOUR
     elsif @btn_2&.is_clicked?
-      "10x10"
+      SIX_BY_SIX
     else
       return
     end
@@ -106,9 +109,9 @@ class GameStateDimensionSelection < GameState
 
     new_y = screen_y_center height
 
-    @btn_1 = draw_button "5 x 5", position_x(1), new_y, width, height
+    @btn_1 = draw_button FOUR_BY_FOUR, position_x(1), new_y, width, height
     @btn_1.draw
-    @btn_2 = draw_button "10 x 10", position_x(4), new_y, width, height
+    @btn_2 = draw_button SIX_BY_SIX, position_x(4), new_y, width, height
     @btn_2.draw
   end
 
@@ -131,12 +134,54 @@ class GameStateImageSelection < GameState
   def initialize game_state, dimension
     @game_state = game_state
     @dimension = dimension
+    @box_positions = []
 
     show
   end
 
   private
 
+  attr_reader :dimension
+
   def show
+    create_image_boxes
+  end
+
+  def create_image_boxes
+    if dimension.equal? FOUR_BY_FOUR
+      create_four_dimension
+    elsif dimension.equal? SIX_BY_SIX
+      create_six_dimension
+    end
+  end
+
+  def create_four_dimension
+    total_size = 100
+
+    4.times.each do |row|
+      4.times.each do |col|
+        x = col * total_size
+        y = row * total_size
+        new_box = draw_button "x", x, y, 80, 80
+        new_box.draw
+
+        @box_positions << new_box
+      end
+    end
+  end
+
+  def create_six_dimension
+    total_size = 80
+
+    6.times.each do |row|
+      6.times.each do |col|
+        x = col * total_size
+        y = row * total_size
+        new_box = draw_button "x", x, y, 50, 50
+        new_box.draw
+
+        @box_positions << new_box
+      end
+    end
   end
 end
