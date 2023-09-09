@@ -12,9 +12,17 @@ class CRectangle < Rectangle
   end
 
   def draw
-    Rectangle.new(
+    @rect = Rectangle.new(
       x: @x, y: @y, width: @width, height: @height,
       color: @color
     )
+  end
+
+  def hide
+    @rect.remove
+  end
+
+  def show
+    @rect.add
   end
 end

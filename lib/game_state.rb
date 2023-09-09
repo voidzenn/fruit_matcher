@@ -6,6 +6,7 @@ SIX_BY_SIX = "6 x 6"
 require "ruby2d"
 require_relative "custom_classes/screen"
 require_relative "custom_classes/button"
+require_relative "custom_classes/c_rectangle"
 require_relative "asset"
 
 class GameState
@@ -140,6 +141,16 @@ class GameStateImageSelection < GameState
     show
   end
 
+  def handle_click mouse_location
+    @box_positions.each do |button, front_box|
+      button.mouse_location = mouse_location
+
+      if button&.is_clicked?
+        front_box.hide
+      end
+    end
+  end
+
   private
 
   attr_reader :dimension, :assets
@@ -168,15 +179,23 @@ class GameStateImageSelection < GameState
     counter = 0
     # Assets count should be half of the total boxes
     load_assets assets_count
+    box_width = 80
+    box_height = 80
 
     dimension.times.each do |row|
       dimension.times.each do |col|
         x = col * box_dimension_size
         y = row * box_dimension_size
-        new_box = draw_button nil, x, y, 80, 80
+        new_box = draw_button nil, x, y, box_width, box_height
         new_box.draw_with_image @assets[counter]
+        front_box = CRectangle.new(x: x,
+                                   y: y,
+                                   width: box_width,
+                                   height: box_height,
+                                   color: "black")
+        front_box.draw
 
-        @box_positions << new_box
+        @box_positions << [new_box, front_box]
 
         counter += 1
       end

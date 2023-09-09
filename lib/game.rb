@@ -62,6 +62,7 @@ class Game
         Screen.clear
       end
     when IMAGE_SELECTION
+      game_state_handle_click callback: nil
     end
   end
 
