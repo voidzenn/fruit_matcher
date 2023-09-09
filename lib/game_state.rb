@@ -1,4 +1,4 @@
-# fronze_string_literal: true
+# frozen_string_literal: true
 
 FOUR_BY_FOUR = "4 x 4"
 SIX_BY_SIX = "6 x 6"
