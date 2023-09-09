@@ -3,6 +3,7 @@
 require "ruby2d"
 require_relative "c_rectangle"
 require_relative "c_text"
+require_relative "c_image"
 
 class Button
   attr_accessor :mouse_location
@@ -19,6 +20,11 @@ class Button
   def draw
     draw_button
     draw_text
+  end
+
+  def draw_with_image image_path
+    draw_button
+    draw_image image_path
   end
 
   def is_clicked?
@@ -41,6 +47,11 @@ class Button
   def draw_text
     text_size = 25
     CText.new(text: label, x: center_x, y: center_y, size: text_size).draw
+  end
+
+  def draw_image image_path
+    image = CImage.new path: image_path, x: btn_x, y: btn_y, width: btn_width, height: btn_height
+    image.draw
   end
 
   def center_x

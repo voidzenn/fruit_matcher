@@ -6,6 +6,7 @@ SIX_BY_SIX = "6 x 6"
 require "ruby2d"
 require_relative "custom_classes/screen"
 require_relative "custom_classes/button"
+require_relative "asset"
 
 class GameState
   def initialize screen_width, screen_height
@@ -141,7 +142,7 @@ class GameStateImageSelection < GameState
 
   private
 
-  attr_reader :dimension
+  attr_reader :dimension, :assets
 
   def show
     create_image_boxes
@@ -156,32 +157,38 @@ class GameStateImageSelection < GameState
   end
 
   def create_four_dimension
-    total_size = 100
+    create_dimension 100, 8, 4 # 4 x 4
+  end
 
-    4.times.each do |row|
-      4.times.each do |col|
-        x = col * total_size
-        y = row * total_size
-        new_box = draw_button "x", x, y, 80, 80
-        new_box.draw
+  def create_six_dimension
+    create_dimension 80, 18, 6 # 6 x 6
+  end
+
+  def create_dimension box_dimension_size, assets_count, dimension
+    counter = 0
+    # Assets count should be half of the total boxes
+    load_assets assets_count
+
+    dimension.times.each do |row|
+      dimension.times.each do |col|
+        x = col * box_dimension_size
+        y = row * box_dimension_size
+        new_box = draw_button nil, x, y, 80, 80
+        new_box.draw_with_image @assets[counter]
 
         @box_positions << new_box
+
+        counter += 1
       end
     end
   end
 
-  def create_six_dimension
-    total_size = 80
-
-    6.times.each do |row|
-      6.times.each do |col|
-        x = col * total_size
-        y = row * total_size
-        new_box = draw_button "x", x, y, 50, 50
-        new_box.draw
-
-        @box_positions << new_box
-      end
-    end
+  def load_assets count
+    assets = Asset.new(count).random_assets
+    new_assets = []
+    # We create shuffled duplicates by assets count
+    new_assets << assets.shuffle
+    new_assets << assets.shuffle
+    @assets = new_assets.flatten
   end
 end
