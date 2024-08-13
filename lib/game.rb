@@ -38,11 +38,13 @@ class Game
       @current_game_state ||= GameStateImageSelection.new @game_state, @selected_dimension
     when ENDED
     end
+
+    @current_game_state&.update
   end
 
   # Handle click will be called in the main.rb when there is click events.
   # Each state can have different process based on how it is used.
-  def handle_click
+  def mouse_click click_type # :mouse_down, :mouse_up
     case @current_state
     when PLAY_BUTTON
       # Passing callback helps in managing the state inside Game class
@@ -52,9 +54,9 @@ class Game
                       @current_game_state = nil;
                       # Clears the last state drawn/shown.
                       Screen.clear }
-      game_state_handle_click callback: callback
+      game_state_mouse_click callback: callback
     when DIMENSION_SELECTION
-      @selected_dimension = game_state_handle_click
+      @selected_dimension = game_state_mouse_click
 
       unless @selected_dimension.nil?
         @current_state = IMAGE_SELECTION
@@ -62,17 +64,17 @@ class Game
         Screen.clear
       end
     when IMAGE_SELECTION
-      game_state_handle_click callback: nil
+      game_state_mouse_click callback: nil
     end
   end
 
   private
 
-  def game_state_handle_click callback: nil
+  def game_state_mouse_click callback: nil
     if callback.nil?
-      @current_game_state.handle_click mouse_location
+      @current_game_state.mouse_click mouse_location
     elsif
-      @current_game_state.handle_click mouse_location, callback: callback
+      @current_game_state.mouse_click mouse_location, callback: callback
     end
   end
 end

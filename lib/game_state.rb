@@ -13,17 +13,29 @@ class GameState
   def initialize screen_width, screen_height
     @screen_width = screen_width
     @screen_height = screen_height
+    @update_callback = nil
+  end
+
+  def update
+    @update_callback.call unless @update_callback.nil?
   end
 
   protected
 
   attr_reader :screen_width, :screen_height
 
-  def draw_button label, x, y, width, height
+  def draw_button label, x, y, width, height, image_path = ""
     Button.new(
       label: label, x: x, y: y, width: width,
-      height: height
+      height: height, image_path: image_path
     )
+  end
+
+  def set_timeout seconds, &block
+    Thread.new do
+      sleep seconds
+      block.call
+    end
   end
 end
 
@@ -40,7 +52,7 @@ class GameStatePlayButton < GameState
     show
   end
 
-  def handle_click mouse_location, callback:
+  def mouse_click mouse_location, callback:
     @button&.mouse_location = mouse_location
 
     if @button&.is_clicked?
@@ -80,7 +92,7 @@ class GameStateDimensionSelection < GameState
     show
   end
 
-  def handle_click mouse_location
+  def mouse_click mouse_location
     @btn_1.mouse_location = mouse_location
     @btn_2.mouse_location = mouse_location
 
@@ -136,24 +148,38 @@ class GameStateImageSelection < GameState
   def initialize game_state, dimension
     @game_state = game_state
     @dimension = dimension
-    @box_positions = []
+    @box_positions = [] # image_box, front_box, is_show ( default: false )
+    @counter = 0
 
     show
   end
 
-  def handle_click mouse_location
-    @box_positions.each do |button, front_box|
-      button.mouse_location = mouse_location
+  def mouse_click mouse_location
+    @box_positions.each_with_index do |(image_box, front_box, is_show), index|
+      image_box.mouse_location = mouse_location
+      @first_selection = nil
+      @second_selection = nil
 
-      if button&.is_clicked?
-        front_box.hide
+      if image_box&.is_clicked?
+        @current_index = index
+        @front_box = front_box
+
+        @first_selection = image_box if @first_selection.nil?
+        @second_selection = image_box if !@first_selection.nil? && @second_selection.nil?
+
+        handle_show_hide_box
       end
+
+      is_show ? front_box.hide : front_box.show
     end
   end
 
   private
 
   attr_reader :dimension, :assets
+
+  def handle_image_selection
+  end
 
   def show
     create_image_boxes
@@ -186,8 +212,8 @@ class GameStateImageSelection < GameState
       dimension.times.each do |col|
         x = col * box_dimension_size
         y = row * box_dimension_size
-        new_box = draw_button nil, x, y, box_width, box_height
-        new_box.draw_with_image @assets[counter]
+        new_box = draw_button(nil, x, y, box_width, box_height, @assets[counter])
+        new_box.draw_with_image
         front_box = CRectangle.new(x: x,
                                    y: y,
                                    width: box_width,
@@ -195,7 +221,7 @@ class GameStateImageSelection < GameState
                                    color: "black")
         front_box.draw
 
-        @box_positions << [new_box, front_box]
+        @box_positions << [new_box, front_box, false]
 
         counter += 1
       end
@@ -209,5 +235,21 @@ class GameStateImageSelection < GameState
     new_assets << assets.shuffle
     new_assets << assets.shuffle
     @assets = new_assets.flatten
+  end
+
+  def is_same_selection?
+    return false if @first_selection.nil? || @second_selection.nil?
+
+    @first_selection.image_path == @second_selection.image_path
+  end
+
+  def handle_show_hide_box
+    if is_same_selection?
+      @front_box.show
+      @box_positions[@current_index][2] = true
+
+      @first_selection = nil
+      @second_selection = nil
+    end
   end
 end
