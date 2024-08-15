@@ -2,7 +2,7 @@
 
 require "ruby2d"
 require "aasm"
-require_relative "state/game_state"
+require_relative "game_state"
 require_relative "custom_classes/button"
 
 class Game
@@ -68,19 +68,18 @@ class Game
     when :play_button
       # Do something if user click play button
       callback = -> { dimension_selection!;
-                      Screen.clear;
-                      @current_game_state = nil; # Assign nil to transition properly
+                      reset_screen;
                     }
       game_state_mouse_click callback: callback
     when :dimension_selection
-      callback = -> { image_selection!;
-                      Screen.clear;
-                      @current_game_state = nil;
-                    }
-      @selected_dimension =  @current_game_state.dimension_selection
-      game_state_mouse_click callback: callback
+      @selected_dimension = game_state_mouse_click
+
+      unless @selected_dimension.nil?
+        image_selection!
+        reset_screen
+      end
     when :image_selection
-      game_state_mouse_click
+      @current_game_state.mouse_click mouse_location, click_type
     end
   end
 
@@ -90,5 +89,10 @@ class Game
     return @current_game_state.mouse_click mouse_location if callback.nil?
 
     @current_game_state.mouse_click mouse_location, callback: callback
+  end
+
+  def reset_screen
+    Screen.clear
+    @current_game_state = nil # Assign nil to change screen properly
   end
 end

@@ -4,10 +4,10 @@ FOUR_BY_FOUR = "4 x 4"
 SIX_BY_SIX = "6 x 6"
 
 require "ruby2d"
-require_relative "../custom_classes/screen"
-require_relative "../custom_classes/button"
-require_relative "../custom_classes/c_rectangle"
-require_relative "../asset"
+require_relative "custom_classes/screen"
+require_relative "custom_classes/button"
+require_relative "custom_classes/c_rectangle"
+require_relative "asset"
 
 module State
   class GameState
@@ -84,23 +84,19 @@ module State
   end
 
   class DimensionSelection < GameState
-    attr_accessor :dimension_selection
-
     def initialize game_state
       @game_state = game_state
       show
     end
 
-    def mouse_click mouse_location, callback: nil
+    def mouse_click mouse_location
       @btn_1.mouse_location = mouse_location
       @btn_2.mouse_location = mouse_location
 
-      if @btn_1&.is_clicked? && callback
-        dimension_selection = FOUR_BY_FOUR
-        callback.call
-      elsif @btn_2&.is_clicked? && callback
-        dimension_selection = SIX_BY_SIX
-        callback.call
+      if @btn_1&.is_clicked?
+        FOUR_BY_FOUR
+      elsif @btn_2&.is_clicked?
+        SIX_BY_SIX
       else
         return
       end
@@ -150,27 +146,43 @@ module State
       @game_state = game_state
       @dimension = dimension
       @box_positions = [] # image_box, front_box, is_show ( default: false )
-      @counter = 0
+      @click_count = 0
       show
     end
 
-    def mouse_click mouse_location, callback: nil
-      @box_positions.each_with_index do |(image_box, front_box, is_show), index|
-        image_box.mouse_location = mouse_location
-        @first_selection = nil
-        @second_selection = nil
+    def mouse_click mouse_location, click_type, callback: nil
+      if click_type == :mouse_down
+        p @box_positions.map{ |bp| bp[2] }
+        @box_positions.each_with_index do |(image_box, front_box, is_show), index|
+          image_box.mouse_location = mouse_location
 
-        if image_box&.is_clicked?
-          @current_index = index
-          @front_box = front_box
+          if image_box&.is_clicked?
+            @click_count += 1
+            @current_index = index
+            @front_box = front_box
 
-          @first_selection = image_box if @first_selection.nil?
-          @second_selection = image_box if !@first_selection.nil? && @second_selection.nil?
+            front_box.hide
 
-          handle_show_hide_box
+            show_hide_box
+          end
         end
+      end
 
-        is_show ? front_box.hide : front_box.show
+      if click_type == :mouse_up
+        @box_positions.each_with_index do |(image_box, front_box, is_show), index|
+          image_box.mouse_location = mouse_location
+
+          if image_box&.is_clicked?
+            if !@second_selection.nil? && !is_show
+              set_timeout(0.4) do
+                @first_selection[1].show unless @first_selection.nil?
+                @second_selection[1].show unless @second_selection.nil?
+                @first_selection = nil
+                @second_selection = nil
+              end
+            end
+          end
+        end
       end
     end
 
@@ -237,20 +249,26 @@ module State
       @assets = new_assets.flatten
     end
 
+    def show_hide_box
+      if @first_selection.nil?
+        @first_selection = @box_positions[@current_index]
+      end
+
+      if !@first_selection.nil? && @click_count == 2
+        @second_selection = @box_positions[@current_index]
+        @click_count = 0
+
+        if is_same_selection?
+          @box_positions[@current_index][2] = true
+          @box_positions[@current_index][2] = true
+        end
+      end
+    end
+
     def is_same_selection?
       return false if @first_selection.nil? || @second_selection.nil?
 
-      @first_selection.image_path == @second_selection.image_path
-    end
-
-    def handle_show_hide_box
-      if is_same_selection?
-        @front_box.show
-        @box_positions[@current_index][2] = true
-
-        @first_selection = nil
-        @second_selection = nil
-      end
+      @first_selection[0].image_path == @second_selection[0].image_path
     end
   end
 end
