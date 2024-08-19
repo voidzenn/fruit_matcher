@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
-FOUR_BY_FOUR = "4 x 4"
-SIX_BY_SIX = "6 x 6"
-
 require "ruby2d"
+require "debug"
 require_relative "custom_classes/screen"
 require_relative "custom_classes/button"
 require_relative "custom_classes/c_rectangle"
 require_relative "asset"
+
+FOUR_BY_FOUR = "4 x 4"
+SIX_BY_SIX = "6 x 6"
 
 module State
   class GameState
@@ -146,41 +147,46 @@ module State
       @game_state = game_state
       @dimension = dimension
       @box_positions = [] # image_box, front_box, is_show ( default: false )
+      @enable_click = true
       @click_count = 0
       show
     end
 
     def mouse_click mouse_location, click_type, callback: nil
-      if click_type == :mouse_down
-        p @box_positions.map{ |bp| bp[2] }
-        @box_positions.each_with_index do |(image_box, front_box, is_show), index|
-          image_box.mouse_location = mouse_location
+      if click_type == :mouse_down && @enable_click
+        @box_positions.each_with_index do |box, index|
+          box[:image].mouse_location = mouse_location
 
-          if image_box&.is_clicked?
+          if box[:image]&.is_clicked?
             @click_count += 1
             @current_index = index
-            @front_box = front_box
 
-            front_box.hide
+            box[:front].hide
 
             show_hide_box
+
+            break
           end
         end
       end
 
       if click_type == :mouse_up
-        @box_positions.each_with_index do |(image_box, front_box, is_show), index|
-          image_box.mouse_location = mouse_location
+        @box_positions.each_with_index do |box, index|
+          box[:image].mouse_location = mouse_location
 
-          if image_box&.is_clicked?
-            if !@second_selection.nil? && !is_show
-              set_timeout(0.4) do
-                @first_selection[1].show unless @first_selection.nil?
-                @second_selection[1].show unless @second_selection.nil?
+          if box[:image]&.is_clicked? && @enable_click
+            if !@second_selection.nil?
+              @enable_click = false
+              set_timeout(0.3) do
+                @first_selection[:front].show unless box[:show_image]
+                @second_selection[:front].show unless box[:show_image]
                 @first_selection = nil
                 @second_selection = nil
+                @enable_click = true
               end
             end
+
+            break
           end
         end
       end
@@ -227,13 +233,17 @@ module State
           new_box = draw_button(nil, x, y, box_width, box_height, @assets[counter])
           new_box.draw_with_image
           front_box = CRectangle.new(x: x,
-                                    y: y,
-                                    width: box_width,
-                                    height: box_height,
-                                    color: "black")
+                                     y: y,
+                                     width: box_width,
+                                     height: box_height,
+                                     color: "black")
           front_box.draw
 
-          @box_positions << [new_box, front_box, false]
+          @box_positions << {
+            image: new_box,
+            front: front_box,
+            show_image: false
+          }
 
           counter += 1
         end
@@ -251,16 +261,17 @@ module State
 
     def show_hide_box
       if @first_selection.nil?
+        return if @box_positions[@current_index][:show_image] # Skip if image already shown
         @first_selection = @box_positions[@current_index]
       end
 
       if !@first_selection.nil? && @click_count == 2
+        return if @box_positions[@current_index][:show_image] # Skip if image already shown
         @second_selection = @box_positions[@current_index]
         @click_count = 0
-
         if is_same_selection?
-          @box_positions[@current_index][2] = true
-          @box_positions[@current_index][2] = true
+          @first_selection[:show_image] = true
+          @second_selection[:show_image] = true
         end
       end
     end
@@ -268,7 +279,7 @@ module State
     def is_same_selection?
       return false if @first_selection.nil? || @second_selection.nil?
 
-      @first_selection[0].image_path == @second_selection[0].image_path
+      @first_selection[:image].image_path == @second_selection[:image].image_path
     end
   end
 end
