@@ -1,78 +1,104 @@
 # frozen_string_literal: true
 
 require "ruby2d"
+require "aasm"
 require_relative "game_state"
 require_relative "custom_classes/button"
 
-# Game states
-INIT = :init
-PLAY_BUTTON = :play_button
-DIMENSION_SELECTION = :dimension_selection
-IMAGE_SELECTION = :image_selection
-ENDED = :ended
-
 class Game
+  include AASM
+
   attr_accessor :mouse_location
 
   def initialize screen_width, screen_height
-    @current_state = INIT
-    @game_state = GameState.new screen_width, screen_height
-    @current_game_state = nil
+    @game_state = State::GameState.new screen_width, screen_height
     @mouse_location = nil
     @selected_dimension = nil
+    super()
   end
 
-  def running?
-    @current_state != ENDED
-  end
+  aasm do
+    state :init, initial: true
+    state :play_button
+    state :dimension_selection
+    state :image_selection
+    state :ended
 
-  def update
-    case @current_state
-    when INIT
-      @current_state = PLAY_BUTTON
-    when PLAY_BUTTON
-      @current_game_state ||= GameStatePlayButton.new  @game_state
-    when DIMENSION_SELECTION
-      @current_game_state ||= GameStateDimensionSelection.new @game_state
-    when IMAGE_SELECTION
-      @current_game_state ||= GameStateImageSelection.new @game_state, @selected_dimension
-    when ENDED
+    event :start_game do
+      transitions from: :init, to: :play_button
+    end
+
+    event :dimension_selection do
+      transitions from: :play_button, to: :dimension_selection
+    end
+
+    event :show_images do
+      transitions from: :dimension_selection, to: :show_images
+    end
+
+    event :image_selection do
+      transitions from: :dimension_selection, to: :image_selection
+    end
+
+    event :ended do
+      transitions from: [:play_button, :dimension_selection, :image_selection], to: :ended
     end
   end
 
+  def running?
+    !aasm.current_state.eql?(:ended)
+  end
+
+  def update
+    case aasm.current_state
+    when :init
+      start_game!
+    when :play_button
+      @current_game_state ||= State::PlayButton.new @game_state
+    when :dimension_selection
+      @current_game_state ||= State::DimensionSelection.new @game_state
+    when :show_images
+      @current_game_state ||= State::ShowImages.new @game_state
+    when :image_selection
+      @current_game_state ||= State::ImageSelection.new @game_state, @selected_dimension
+    when :ended
+    end
+
+    @current_game_state&.update
+  end
+
   # Handle click will be called in the main.rb when there is click events.
-  # Each state can have different process based on how it is used.
-  def handle_click
-    case @current_state
-    when PLAY_BUTTON
-      # Passing callback helps in managing the state inside Game class
-      callback = -> { @current_state = DIMENSION_SELECTION;
-                      # We should assign nil in order for the ||= to work when
-                      # assigning new state.
-                      @current_game_state = nil;
-                      # Clears the last state drawn/shown.
-                      Screen.clear }
-      game_state_handle_click callback: callback
-    when DIMENSION_SELECTION
-      @selected_dimension = game_state_handle_click
+  # Each state can have different process.
+  def mouse_click click_type # :mouse_down, :mouse_up
+    case aasm.current_state
+    when :play_button
+      # Do something if user click play button
+      callback = -> { dimension_selection!;
+                      reset_screen;
+                    }
+      game_state_mouse_click callback: callback
+    when :dimension_selection
+      @selected_dimension = game_state_mouse_click
 
       unless @selected_dimension.nil?
-        @current_state = IMAGE_SELECTION
-        @current_game_state = nil
-        Screen.clear
+        image_selection!
+        reset_screen
       end
-    when IMAGE_SELECTION
-      game_state_handle_click callback: nil
+    when :image_selection
+      @current_game_state.mouse_click mouse_location, click_type
     end
   end
 
   private
 
-  def game_state_handle_click callback: nil
-    if callback.nil?
-      @current_game_state.handle_click mouse_location
-    elsif
-      @current_game_state.handle_click mouse_location, callback: callback
-    end
+  def game_state_mouse_click callback: nil
+    return @current_game_state.mouse_click mouse_location if callback.nil?
+
+    @current_game_state.mouse_click mouse_location, callback: callback
+  end
+
+  def reset_screen
+    Screen.clear
+    @current_game_state = nil # Assign nil to change screen properly
   end
 end

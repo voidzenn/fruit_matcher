@@ -6,15 +6,16 @@ require_relative "c_text"
 require_relative "c_image"
 
 class Button
-  attr_accessor :mouse_location
+  attr_accessor :mouse_location, :image_path
 
-  def initialize label:, x:, y:, width:, height:, color: "black"
+  def initialize label:, x:, y:, width:, height:, color: "black", image_path: ""
     @label = label
     @btn_x = x
     @btn_y = y
     @btn_width = width
     @btn_height = height
     @color = color
+    @image_path = image_path
   end
 
   def draw
@@ -22,9 +23,9 @@ class Button
     draw_text
   end
 
-  def draw_with_image image_path
+  def draw_with_image
     draw_button
-    draw_image image_path
+    draw_image
   end
 
   def is_clicked?
@@ -49,7 +50,7 @@ class Button
     CText.new(text: label, x: center_x, y: center_y, size: text_size).draw
   end
 
-  def draw_image image_path
+  def draw_image
     image = CImage.new path: image_path, x: btn_x, y: btn_y, width: btn_width, height: btn_height
     image.draw
   end

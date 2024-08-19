@@ -24,7 +24,12 @@ def run
 
     on :mouse_down do |event|
       game.mouse_location = [event.x, event.y]
-      game.handle_click
+      game.mouse_click :mouse_down
+    end
+
+    on :mouse_up do |event|
+      game.mouse_location = [event.x, event.y]
+      game.mouse_click :mouse_up
     end
 
     set start_time: Time.now
