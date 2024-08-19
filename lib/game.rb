@@ -32,6 +32,10 @@ class Game
       transitions from: :play_button, to: :dimension_selection
     end
 
+    event :show_images do
+      transitions from: :dimension_selection, to: :show_images
+    end
+
     event :image_selection do
       transitions from: :dimension_selection, to: :image_selection
     end
@@ -53,6 +57,8 @@ class Game
       @current_game_state ||= State::PlayButton.new @game_state
     when :dimension_selection
       @current_game_state ||= State::DimensionSelection.new @game_state
+    when :show_images
+      @current_game_state ||= State::ShowImages.new @game_state
     when :image_selection
       @current_game_state ||= State::ImageSelection.new @game_state, @selected_dimension
     when :ended

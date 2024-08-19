@@ -194,42 +194,28 @@ module State
 
     private
 
-    attr_reader :dimension, :assets
-
-    def handle_image_selection
-    end
+    attr_reader :game_state, :dimension, :assets
 
     def show
       create_image_boxes
-    end
-
-    def create_image_boxes
-      if dimension.equal? FOUR_BY_FOUR
-        create_four_dimension
-      elsif dimension.equal? SIX_BY_SIX
-        create_six_dimension
-      end
-    end
-
-    def create_four_dimension
-      create_dimension 100, 8, 4 # 4 x 4
-    end
-
-    def create_six_dimension
-      create_dimension 80, 18, 6 # 6 x 6
     end
 
     def create_dimension box_dimension_size, assets_count, dimension
       counter = 0
       # Assets count should be half of the total boxes
       load_assets assets_count
-      box_width = 80
-      box_height = 80
+      box_width = box_dimension_size
+      box_height = box_dimension_size
+      margin = 10
+      total_width = (dimension * box_dimension_size) + ((dimension - 1) * margin)
+      total_height = (dimension * box_dimension_size) + ((dimension - 1) * margin)
+      start_x = (game_state.screen_width - total_width) / 2
+      start_y = (game_state.screen_height - total_height) / 2
 
       dimension.times.each do |row|
         dimension.times.each do |col|
-          x = col * box_dimension_size
-          y = row * box_dimension_size
+          x = start_x + ( col * (box_dimension_size + margin))
+          y = start_y + ( row * (box_dimension_size + margin))
           new_box = draw_button(nil, x, y, box_width, box_height, @assets[counter])
           new_box.draw_with_image
           front_box = CRectangle.new(x: x,
@@ -257,6 +243,22 @@ module State
       new_assets << assets.shuffle
       new_assets << assets.shuffle
       @assets = new_assets.flatten
+    end
+
+    def create_image_boxes
+      if dimension.equal? FOUR_BY_FOUR
+        create_four_dimension
+      elsif dimension.equal? SIX_BY_SIX
+        create_six_dimension
+      end
+    end
+
+    def create_four_dimension
+      create_dimension 100, 8, 4 # 4 x 4
+    end
+
+    def create_six_dimension
+      create_dimension 80, 18, 6 # 6 x 6
     end
 
     def show_hide_box
