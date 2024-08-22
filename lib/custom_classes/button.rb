@@ -35,14 +35,19 @@ class Button
     end
   end
 
+  def hide
+    @button.hide
+  end
+
   private
 
   attr_reader :label, :btn_x, :btn_y, :btn_width, :btn_height, :color
 
   def draw_button
-    CRectangle.new(
+    @button = CRectangle.new(
       x: btn_x, y: btn_y, width: btn_width, height: btn_height, color: color
-    ).draw
+    )
+    @button.draw
   end
 
   def draw_text

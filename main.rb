@@ -13,13 +13,11 @@ def run
   Screen.set width: SCREEN_WIDTH, height: SCREEN_HEIGHT, title: TITLE, background: BG_COLOR
 
   game = Game.new SCREEN_WIDTH, SCREEN_HEIGHT
+  game.start
 
   if game.running?
     update do
       game.update
-    end
-
-    render do
     end
 
     on :mouse_down do |event|
