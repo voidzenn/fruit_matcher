@@ -36,7 +36,8 @@ class ImageSelection
   end
 
   def mouse_up mouse_location
-    @box_positions.each_with_index do |box, index|
+    if @enable_click
+      @box_positions.each_with_index do |box, index|
         box[:image].mouse_location = mouse_location
 
         if box[:image]&.is_clicked? && @enable_click
@@ -54,6 +55,7 @@ class ImageSelection
           break
         end
       end
+    end
   end
 
   private
@@ -92,7 +94,7 @@ class ImageSelection
       dimension.times.each do |col|
         x = start_x + ( col * (box_dimension_size + margin))
         y = start_y + ( row * (box_dimension_size + margin))
-        new_box = draw_button(nil, x, y, box_width, box_height, @assets[counter])
+        new_box = Button.new label: nil, x: x, y: y, width: box_width, height: box_height, image_path: @assets[counter]
         new_box.draw_with_image
         front_box = CRectangle.new(x: x,
                                     y: y,
@@ -122,10 +124,24 @@ class ImageSelection
   end
 
   def create_image_boxes
-    if dimension.equal? FOUR_BY_FOUR
+    if is_four_by_four? dimension
       create_four_dimension
-    elsif dimension.equal? SIX_BY_SIX
+    elsif is_six_by_six? dimension
       create_six_dimension
+    end
+
+    show_boxes
+  end
+
+  def show_boxes
+    @enable_click = false
+    @box_positions.each{ |bp| bp[:front].hide }
+
+    time_delay = is_six_by_six?(dimension) ? 3 : 2
+
+    set_timeout(time_delay) do
+      @box_positions.each{ |bp| bp[:front].show }
+      @enable_click = true
     end
   end
 

@@ -38,9 +38,9 @@ class DimensionSelection
 
     new_y = screen_y_center
 
-    @btn_1 = draw_button FOUR_BY_FOUR, position_x(1), new_y, width, height
+    @btn_1 = Button.new label: FOUR_BY_FOUR, x: position_x(1), y: new_y, width: width, height: height
     @btn_1.draw
-    @btn_2 = draw_button SIX_BY_SIX, position_x(4), new_y, width, height
+    @btn_2 = Button.new label: SIX_BY_SIX, x: position_x(4), y: new_y, width: width, height: height
     @btn_2.draw
   end
 
