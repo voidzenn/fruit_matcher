@@ -2,7 +2,9 @@
 
 require "ruby2d"
 require "aasm"
-require_relative "game_state"
+require_relative "states/play_button"
+require_relative "states/dimension_selection"
+require_relative "states/image_selection"
 require_relative "custom_classes/button"
 
 class Game
@@ -10,39 +12,33 @@ class Game
 
   attr_accessor :mouse_location
 
-  def initialize screen_width, screen_height
-    @game_state = State::GameState.new screen_width, screen_height
-    @mouse_location = nil
-    @selected_dimension = nil
-    super()
-  end
-
   aasm do
     state :init, initial: true
     state :play_button
     state :dimension_selection
     state :image_selection
-    state :ended
+    state :game_over
 
     event :start_game do
       transitions from: :init, to: :play_button
     end
 
-    event :dimension_selection do
+    event :transition_to_dimension_selection do
       transitions from: :play_button, to: :dimension_selection
     end
 
-    event :show_images do
-      transitions from: :dimension_selection, to: :show_images
-    end
-
-    event :image_selection do
+    event :transition_to_image_selection do
       transitions from: :dimension_selection, to: :image_selection
     end
 
-    event :ended do
-      transitions from: [:play_button, :dimension_selection, :image_selection], to: :ended
+    event :transition_to_game_over do
+      transitions from: [:play_button, :dimension_selection, :image_selection], to: :game_over
     end
+  end
+
+  def start
+    start_game!
+    handle_state
   end
 
   def running?
@@ -50,55 +46,48 @@ class Game
   end
 
   def update
-    case aasm.current_state
-    when :init
-      start_game!
-    when :play_button
-      @current_game_state ||= State::PlayButton.new @game_state
-    when :dimension_selection
-      @current_game_state ||= State::DimensionSelection.new @game_state
-    when :show_images
-      @current_game_state ||= State::ShowImages.new @game_state
-    when :image_selection
-      @current_game_state ||= State::ImageSelection.new @game_state, @selected_dimension
-    when :ended
-    end
-
-    @current_game_state&.update
   end
 
-  # Handle click will be called in the main.rb when there is click events.
-  # Each state can have different process.
-  def mouse_click click_type # :mouse_down, :mouse_up
-    case aasm.current_state
-    when :play_button
-      # Do something if user click play button
-      callback = -> { dimension_selection!;
-                      reset_screen;
-                    }
-      game_state_mouse_click callback: callback
-    when :dimension_selection
-      @selected_dimension = game_state_mouse_click
-
-      unless @selected_dimension.nil?
-        image_selection!
-        reset_screen
-      end
-    when :image_selection
-      @current_game_state.mouse_click mouse_location, click_type
+  def mouse_click click_type
+    case click_type
+    when :mouse_down
+      @current_state.mouse_down mouse_location
+    when :mouse_up
+      @current_state.mouse_up mouse_location
     end
   end
 
   private
 
-  def game_state_mouse_click callback: nil
-    return @current_game_state.mouse_click mouse_location if callback.nil?
+  attr_reader :game_state
 
-    @current_game_state.mouse_click mouse_location, callback: callback
+  def handle_state
+    case aasm.current_state
+    when :init
+      start_game!
+    when :play_button
+      @current_state = PlayButton.new next_event
+    when :dimension_selection
+      @current_state = DimensionSelection.new next_event
+    when :image_selection
+      @current_state = ImageSelection.new next_event, @current_state.dimension
+    when :game_over
+    end
   end
 
-  def reset_screen
-    Screen.clear
-    @current_game_state = nil # Assign nil to change screen properly
+  def next_event
+    -> { transition_event; handle_state; }
+  end
+
+  def transition_event
+    case aasm.current_state
+    when :play_button
+      transition_to_dimension_selection!
+    when :dimension_selection
+      transition_to_image_selection!
+    when :image_selection
+      transition_to_game_over!
+    when :game_over
+    end
   end
 end
