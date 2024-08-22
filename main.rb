@@ -12,7 +12,7 @@ TITLE = "Matcher"
 def run
   Screen.set width: SCREEN_WIDTH, height: SCREEN_HEIGHT, title: TITLE, background: BG_COLOR
 
-  game = Game.new SCREEN_WIDTH, SCREEN_HEIGHT
+  game = Game.new
   game.start
 
   if game.running?

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "ruby2d"
 require_relative "../custom_classes/button"
 require_relative "../concerns/game_display"
@@ -11,7 +13,16 @@ class PlayButton
     @height = 60
 
     show_button
-    click_event
+  end
+
+  def mouse_down mouse_location
+    unless @button.nil?
+      @button.mouse_location = mouse_location
+      handle_click
+    end
+  end
+
+  def mouse_up mouse_location
   end
 
   private
@@ -37,15 +48,6 @@ class PlayButton
     if @button.is_clicked?
       @button.hide
       next_event.call
-    end
-  end
-
-  def click_event
-    Window.on :mouse_down do |event|
-      unless @button.nil?
-        @button.mouse_location = [event.x, event.y]
-        handle_click
-      end
     end
   end
 end
